@@ -1,0 +1,32 @@
+name: release nightly dist only
+
+on:
+  push:
+    tags:
+      - 'nightly-*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+      - name: Build
+        run: |
+          version=${{ github.ref_name }}
+          npm i
+          npm run build
+          cd dist
+          zip -r headscale-ui-${{ github.ref_name }}.zip headscale-ui
+      - name: Create GitHub release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ github.ref_name }}
+          title: ${{ github.ref_name }}
+          prerelease: true
+          files: |
+            dist/headscale-ui-${{ github.ref_name }}.zip
